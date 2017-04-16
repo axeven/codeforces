@@ -1,6 +1,5 @@
 package cf526;
 
-
 import java.util.Scanner;
 
 /**
@@ -9,36 +8,51 @@ import java.util.Scanner;
  */
 public class C {
 
+    private static int gcd(int a, int b) {
+        if (b == 0) {
+            return a;
+        }
+        return gcd(b, a % b);
+    }
+
     public static void main(String[] args) {
         String s = (new Scanner(System.in)).nextLine();
         String[] as = s.split(" ");
-        int c = Integer.parseInt(as[0]);
+        long c = Long.parseLong(as[0]);
         int hr = Integer.parseInt(as[1]);
         int hb = Integer.parseInt(as[2]);
         int wr = Integer.parseInt(as[3]);
         int wb = Integer.parseInt(as[4]);
-        if (hr * 1.0 / wr < hb * 1.0 / wb) {
-            int ht = hr;
+        long ans = 0;
+        if (hb * wr > hr * wb) {
+            int temp = hr;
             hr = hb;
-            hb = ht;
-            int wt = wr;
+            hb = temp;
+            temp = wr;
             wr = wb;
-            wb = wt;
+            wb = temp;
         }
-        int eat = (c / wr) * wr;
-        int left = c - eat;
-        if (left == 0) {
-            System.out.println(eat / wr * hr);
+        if (Math.max(wb, wr) > c) {
+            if (wb > wr) {
+                wb = wr;
+                hb = hr;
+            }
+            System.out.println(c / wb * hb);
+            return;
         }
-        int i = left / wb;
-        while (i < 1) {
-            left += wr;
-            i = left / wb;
+        long lim = Math.min(wr / gcd(wb, wr) + 1, c / wb);
+        if (c / wr < lim) {
+            lim = c / wr;
+            int temp = hr;
+            hr = hb;
+            hb = temp;
+            temp = wr;
+            wr = wb;
+            wb = temp;
         }
-        if (eat / wr * hr < (c - left) / wr * hr + i * hb) {
-            System.out.println((c - left) / wr * hr + i * hb);
-        } else {
-            System.out.println(eat / wr * hr);
+        for (long i = 0; i <= lim; ++i) {
+            ans = Math.max(ans, i * hb + (c - i * wb) / wr * hr);
         }
+        System.out.println(ans);
     }
 }
