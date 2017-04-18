@@ -1,44 +1,49 @@
 package cf416;
 
-
-import java.util.Scanner;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
 
 public class D {
 
     public static void main(String[] args) {
-        Scanner sc = new Scanner(System.in);
-        sc.nextLine();
-        String s = sc.nextLine();
-        String[] as = s.split(" ");
-        int c = 1;
-        int[] dif = new int[as.length - 1];
-        int x;
-        int prevx = Integer.parseInt(as[0]);
-        int xxx = -1000000000;
-        for (int i = 1; i < as.length; i++) {
-            x = Integer.parseInt(as[i]);
-            dif[i - 1] = x - prevx;
-            if (x == -1 || prevx == -1) {
-                dif[i - 1] = xxx;
+        BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
+        try {
+            br.readLine();
+            String s = br.readLine();
+            String as[] = s.split(" ");
+
+            int last_diff = Integer.MAX_VALUE;
+            int last = Integer.MAX_VALUE;
+            int ans = 0;
+            for (int i = 0; i < as.length; ++i) {
+                int n = Integer.parseInt(as[i]);
+                if (last_diff == Integer.MAX_VALUE) {
+                    //no sequence started
+                    if (last == Integer.MAX_VALUE) {
+                        //trying to start a sequence
+                    } else {
+                        //starting a sequence
+                        last_diff = n - last;
+                    }
+                } else {
+                    //a sequence is already started
+                    assert last != Integer.MAX_VALUE;
+                    if (n == last + last_diff) {
+                        // n belongs to same sequence, continue
+                    } else {
+                        System.out.println("ended in as " + (i - 1) + ": " + last);
+                        // the sequence stop in last, trying to start a new sequence
+                        last_diff = Integer.MAX_VALUE;
+                        ans += 1;
+                    }
+                }
+                last = n;
             }
-            prevx = x;
+            // close last sequence
+            ans += 1;
+            System.out.println(ans);
+        } catch (IOException ex) {
         }
-        int last = xxx;
-        for (int i = 0; i < dif.length; i++) {
-            System.out.println(i + " " + last + " " + dif[i] + " " + c);
-            if (dif[i] == xxx) {
-                continue;
-            }
-            if (dif[i] == last) {
-                continue;
-            }
-            if (last != xxx) {
-                c++;
-                last = xxx;
-                continue;
-            }
-            last = dif[i];
-        }
-        System.out.println(c);
     }
 }
