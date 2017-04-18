@@ -14,31 +14,30 @@ public class D {
             String as[] = s.split(" ");
 
             int last_diff = Integer.MAX_VALUE;
-            int last = Integer.MAX_VALUE;
             int ans = 0;
+            int p[] = new int[as.length];
             for (int i = 0; i < as.length; ++i) {
-                int n = Integer.parseInt(as[i]);
+                p[i] = Integer.parseInt(as[i]);
                 if (last_diff == Integer.MAX_VALUE) {
                     //no sequence started
-                    if (last == Integer.MAX_VALUE) {
+                    if (i == 0) {
                         //trying to start a sequence
                     } else {
                         //starting a sequence
-                        last_diff = n - last;
+                        last_diff = p[i] - p[i - 1];
                     }
                 } else {
                     //a sequence is already started
-                    assert last != Integer.MAX_VALUE;
-                    if (n == last + last_diff) {
+                    assert i > 1;
+                    if (p[i] == p[i - 1] + last_diff) {
                         // n belongs to same sequence, continue
                     } else {
-                        System.out.println("ended in as " + (i - 1) + ": " + last);
+                        System.out.println("ended in as " + (i - 1) + ": " + p[i - 1]);
                         // the sequence stop in last, trying to start a new sequence
                         last_diff = Integer.MAX_VALUE;
                         ans += 1;
                     }
                 }
-                last = n;
             }
             // close last sequence
             ans += 1;
