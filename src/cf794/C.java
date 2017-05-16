@@ -47,52 +47,7 @@ public class C {
         return new String(c);
     }
 
-    private static String solve1(char[] a, char[] b) {
-        Arrays.sort(a);
-        Arrays.sort(b);
-        char[] c = new char[a.length];
-        for (int i = 0, j = 0, k = a.length - 1; i < a.length; ++i) {
-            if (i % 2 == 0) {
-                c[i] = a[j];
-                j++;
-            } else {
-                c[i] = b[k];
-                k--;
-            }
-        }
-        return new String(c);
-    }
-
-    private static void test(int n) {
-        char a[] = new char[n];
-        char b[] = new char[n];
-        for (int i = 0; i < n; i++) {
-            a[i] = 'x';
-        }
-        for (int i = -1; i < n; i++) {
-            if (i >= 0) {
-                a[i] = 'a';
-            }
-            for (int j = 0; j < n; j++) {
-                b[j] = 'x';
-            }
-            for (int k = -1; k < n; k++) {
-                if (k >= 0) {
-                    b[k] = 'a';
-                }
-                String x1 = solve1(a, b);
-                String x = solve(a, b);
-                if (!x.endsWith(x1)) {
-                    System.out.println(new String(a));
-                    System.out.println(new String(b));
-                    System.out.println(x + " " + x1);
-                }
-            }
-        }
-    }
-
     public static void main(String[] args) {
-        //test(4);
         BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
         try {
             char[] a = br.readLine().toCharArray();
