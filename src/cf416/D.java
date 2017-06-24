@@ -7,123 +7,146 @@ import java.io.InputStreamReader;
 public class D {
 
     private static int solve(String[] as) {
-        int increment = Integer.MAX_VALUE; // if 0 then equal
-        int decrement = Integer.MAX_VALUE;
-        int last_last_i_pos = -1;
-        int last_i_pos = -1; //last i of positive p_i
-        int ans = 0;
-        int p[] = new int[as.length];
-        int diff_log[] = new int[as.length];
-        int start_seq = 0;
+        int idx = 0;
+        int[] begin = new int[as.length / 2 + 2];
+        int[] end = new int[begin.length];
+        int[] inc = new int[begin.length];
+        int[] parsed = new int[as.length];
+        inc[idx] = 1;
+        begin[idx] = -1;
+        end[idx] = -1;
+        idx++;
+        begin[idx] = -1;
+        inc[idx] = Integer.MAX_VALUE;
         for (int i = 0; i < as.length; ++i) {
-            p[i] = Integer.parseInt(as[i]);
-            //System.out.println("i:" + i);
-            if (p[i] == -1) {
-                //System.out.println("found -1");
-                if (increment == Integer.MAX_VALUE && decrement == Integer.MAX_VALUE) {
-                    // any inc or dec but now -1
+            parsed[i] = Integer.parseInt(as[i]);
+            if (parsed[i] == -1) {
+                if (begin[idx] == -1) {
                     // continue
-                } else if (increment != Integer.MAX_VALUE) {
-                    // we have specific inc but now -1
-                    // continue
-                    diff_log[i] = increment;
-                    p[i] = p[last_i_pos] + increment;
                 } else {
-                    // we have specific dec but now -1
-                    // coninue
-                    diff_log[i] = decrement;
-                    if (p[last_i_pos] + decrement * (i - last_i_pos) <= 0) {
-                        // if we continue with dec then in here will be less than 1
-                        // so we stop the sequence
-                        ans++;
-                        decrement = Integer.MAX_VALUE;
-                        //System.out.println(i + "a");
-                        start_seq = i;
+                    if (inc[idx] != Integer.MAX_VALUE) {
+                        assert parsed[i - 1] != -1;
+                        parsed[i] = parsed[i - 1] + inc[idx];
+                        if (parsed[i] < 1) {
+                            parsed[i] = -1;
+                            end[idx] = i - 1;
+                            idx += 1;
+                            begin[idx] = -1;
+                            inc[idx] = Integer.MAX_VALUE;
+                            // all is good
+                        } else {
+                            // continue
+                        }
                     } else {
-                        p[i] = p[last_i_pos] + decrement;
+                        // continue
+                        // 00000000000010000000 cant do anything here
                     }
                 }
-            } else if (increment == Integer.MAX_VALUE && decrement == Integer.MAX_VALUE) {
-                //System.out.println("Not -1 and no seq decided, start: " + start_seq + ", last i: " + last_i_pos);
-                // any inc or dec but now non -1
-                if (start_seq <= last_i_pos) {
-                    //a sequence can be started
-                    int diff = p[i] - p[last_i_pos];
-                    if (diff % (i - last_i_pos) != 0) {
-                        //the sequence must be broken either before of
-                        //after last i post
-                        ans++;
-                        //System.out.println(i + "bb");
-                        //this sequence in the middle can have arbitrary inc/dec
-                        //but there is a limitation
-                        if (p[i] > last_i_pos - last_last_i_pos - 1 || p[i] > i - last_i_pos - 1) {
-                            // it is within limit
+            } else {
+                if (begin[idx] == -1) {
+                    // it is not -1 but seq hasn't began so we have to start
+                    begin[idx] = i;
+                } else {
+                    // it is not -1 and seq already began
+                    if (inc[idx] != Integer.MAX_VALUE) {
+                        if (parsed[i - 1] + inc[idx] == parsed[i]) {
+                            // continue
                         } else {
-                            //there must be another sequence either after or
-                            //before lasi pos
-                            ans++;
-                            //System.out.println(i + "bc");
+                            end[idx] = i - 1;
+                            idx += 1;
+                            begin[idx] = i;
+                            inc[idx] = Integer.MAX_VALUE;
+                            // go
                         }
-                        //can not decide anythin on new seq
-                        start_seq = i;
-                    } else // we have specific inc/dec
-                    if (diff < 0) {
-                        //we can continue safely
-                        decrement = diff;
-                        diff_log[i] = decrement;
                     } else {
-                        increment = diff / (i - last_i_pos);
-                        if (p[last_i_pos] - increment * (last_i_pos - start_seq) > 0) {
-                            // no broken
+                        // the inc for this seq hasn't been decided
+                        // also check if the -1 buffer can hold the inc
+                        if ((parsed[i] - parsed[begin[idx]]) % (i - begin[idx]) == 0) {
+                            // we can decide the inc
+                            inc[idx] = (parsed[i] - parsed[begin[idx]]) / (i - begin[idx]);
+                            if (inc[idx] > 0) {
+                                // then check if the prev buffer can hold it
+                                if ((begin[idx] - end[idx - 1] - 1) > (parsed[begin[idx]] - 1) / inc[idx]) {
+                                    // it can't
+                                    begin[idx + 1] = begin[idx];
+                                    begin[idx] = end[idx - 1] + 1;
+                                    inc[idx + 1] = inc[idx];
+                                    inc[idx] = 1;
+                                    end[idx] = begin[idx + 1] - 1;
+                                    idx++;
+                                } else {
+                                    // shift the begin, use up the buffer
+                                    parsed[end[idx - 1] + 1] = parsed[begin[idx]] - (begin[idx] - end[idx - 1] + 1) * inc[idx];
+                                    begin[idx] = end[idx - 1] + 1;
+                                }
+                            } // otherwise it can always hold
                         } else {
-                            ans++;
-                            //System.out.println(i + "bd");
+                            // we can not decide the inc, we must break the buffer instead
+                            // the case 0000000100000 can not be decided directly
+                            // update, the case above, we set inc = -1
+                            //         that sees to be the best solution
+                            //         other inc value may introduce new seq
+                            // case when prev buffer is enough
+                            // set cur inc = 1
+                            // set new seq starting i
+                            // if buffer is enough then prev seq should be decided
+                            // if next buffer is enough (also use parsed[i] to check this)
+                            // set cur inc = -1
+                            // set new seq starting i
+                            // if no buffer is enough
+                            // set cur inc = -1
+                            // set begin and end accordingly
+                            // set new seq starting i
+                            if (parsed[begin[idx]] >= begin[idx] - end[idx - 1]) {
+                                inc[idx] = 1;
+                                parsed[end[idx - 1] + 1] = parsed[begin[idx]] - begin[idx] + end[idx - 1] + 1;
+                                begin[idx] = end[idx - 1] + 1;
+                                end[idx] = i - 1;
+                                idx++;
+                                begin[idx] = i;
+                                inc[idx] = Integer.MAX_VALUE;
+                            } else {
+                                inc[idx] = -1;
+                                parsed[end[idx - 1] + 1] = parsed[begin[idx]] + begin[idx] - end[idx - 1] - 1;
+                                end[idx] = Math.min(i - 1, begin[idx] + parsed[begin[idx]] - 1);
+                                begin[idx] = end[idx - 1] + 1;
+                                idx++;
+                                begin[idx] = i;
+                                inc[idx] = Integer.MAX_VALUE;
+                            }
                         }
-                        diff_log[i] = increment;
                     }
-                    //if it is increasing then it may be broken before last i pos
-                    //it can also broke after last i pos
-                } else {
-                    //can not decide, continue
                 }
-            } else if (increment != Integer.MAX_VALUE) {
-                //System.out.println("Not -1 and inc seq: " + increment);
-                // we have specific inc but now non -1
-                if (p[i] == (i - last_i_pos) * increment + p[last_i_pos]) {
-                    // p[i] match the inc, we can continue
-                    diff_log[i] = increment;
-                } else {
-                    // we have to stop the sequence and start a new one
-                    ans++;
-                    // cant decide the inc/dec of the new sequence 
-                    //System.out.println(i + "e " + increment + " " + decrement);
-                    increment = Integer.MAX_VALUE;
-                    start_seq = i;
-                }
-            } else {// we have specific dec but now non -1
-                //System.out.println("Not -1 and dec seq: " + decrement);
-                if (p[i] == (i - last_i_pos) * decrement + p[last_i_pos]) {
-                    // p[i] match the inc, we can continue
-                    diff_log[i] = decrement;
-                } else {
-                    // we have to stop the sequence and start a new one
-                    ans++;
-                    // cant decide the inc/dec of the new sequence 
-                    //System.out.println(i + "f");
-                    decrement = Integer.MAX_VALUE;
-                    start_seq = i;
-                }
+
             }
-            if (p[i] != -1) {
-                last_last_i_pos = last_i_pos;
-                last_i_pos = i;
-            }
-            ////System.out.println(increment + " " + decrement);
         }
-        // close last sequence
-        ans += 1;
-        //System.out.println("g");
-        return ans;
+        if (end[idx] < 1) {
+            if (inc[idx] != Integer.MAX_VALUE) {
+                end[idx] = as.length - 1;
+            } else {
+                if (begin[idx] == -1) {
+                    begin[idx] = 0;
+                    end[idx] = as.length - 1;
+                } else if (parsed[begin[idx]] >= begin[idx] - end[idx - 1]) {
+                    inc[idx] = 1;
+                    parsed[end[idx - 1] + 1] = parsed[begin[idx]] - begin[idx] + end[idx - 1] + 1;
+                    begin[idx] = end[idx - 1] + 1;
+                    end[idx] = as.length - 1;
+                } else {
+                    inc[idx] = -1;
+                    parsed[end[idx - 1] + 1] = parsed[begin[idx]] + begin[idx] - end[idx - 1] - 1;
+                    end[idx] = Math.min(as.length - 1, begin[idx] + parsed[begin[idx]] - 1);
+                    begin[idx] = end[idx - 1] + 1;
+                    if (end[idx] < as.length - 1) {
+                        idx++;
+                        begin[idx] = end[idx - 1] + 1;
+                        inc[idx] = Integer.MAX_VALUE;
+                        end[idx] = as.length - 1;
+                    }
+                }
+            }
+        }
+        return idx;
     }
 
     public static void main(String[] args) {
