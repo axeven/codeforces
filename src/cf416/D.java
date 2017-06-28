@@ -6,7 +6,7 @@ import java.io.InputStreamReader;
 
 public class D {
 
-    private static int solve(String[] as) {
+    public static int solve(String[] as) {
         int idx = 0;
         int[] begin = new int[as.length / 2 + 2];
         int[] end = new int[begin.length];
@@ -28,12 +28,17 @@ public class D {
                         assert parsed[i - 1] != -1;
                         parsed[i] = parsed[i - 1] + inc[idx];
                         if (parsed[i] < 1) {
-                            parsed[i] = -1;
-                            end[idx] = i - 1;
-                            idx += 1;
-                            begin[idx] = -1;
-                            inc[idx] = Integer.MAX_VALUE;
-                            // all is good
+                            if (inc[idx] > 0) {
+                                // overflow
+                                parsed[i] = 0;
+                            } else {
+                                parsed[i] = -1;
+                                end[idx] = i - 1;
+                                idx += 1;
+                                begin[idx] = -1;
+                                inc[idx] = Integer.MAX_VALUE;
+                                // all is good
+                            }
                         } else {
                             // continue
                         }
@@ -68,12 +73,12 @@ public class D {
                                 // then check if the prev buffer can hold it
                                 if ((begin[idx] - end[idx - 1] - 1) > (parsed[begin[idx]] - 1) / inc[idx]) {
                                     // it can't
-                                    begin[idx + 1] = begin[idx];
                                     begin[idx] = end[idx - 1] + 1;
-                                    inc[idx + 1] = inc[idx];
-                                    inc[idx] = 1;
-                                    end[idx] = begin[idx + 1] - 1;
+                                    inc[idx] = 0;
+                                    end[idx] = i - 1;
                                     idx++;
+                                    begin[idx] = i;
+                                    inc[idx] = Integer.MAX_VALUE;
                                 } else {
                                     // shift the begin, use up the buffer
                                     parsed[end[idx - 1] + 1] = parsed[begin[idx]] - (begin[idx] - end[idx - 1] + 1) * inc[idx];
@@ -83,37 +88,16 @@ public class D {
                         } else {
                             // we can not decide the inc, we must break the buffer instead
                             // the case 0000000100000 can not be decided directly
-                            // update, the case above, we set inc = -1
-                            //         that sees to be the best solution
+                            // update, the case above, we set inc = 0
+                            //         that seems to be the best solution
                             //         other inc value may introduce new seq
-                            // case when prev buffer is enough
-                            // set cur inc = 1
-                            // set new seq starting i
-                            // if buffer is enough then prev seq should be decided
-                            // if next buffer is enough (also use parsed[i] to check this)
-                            // set cur inc = -1
-                            // set new seq starting i
-                            // if no buffer is enough
-                            // set cur inc = -1
-                            // set begin and end accordingly
-                            // set new seq starting i
-                            if (parsed[begin[idx]] >= begin[idx] - end[idx - 1]) {
-                                inc[idx] = 1;
-                                parsed[end[idx - 1] + 1] = parsed[begin[idx]] - begin[idx] + end[idx - 1] + 1;
-                                begin[idx] = end[idx - 1] + 1;
-                                end[idx] = i - 1;
-                                idx++;
-                                begin[idx] = i;
-                                inc[idx] = Integer.MAX_VALUE;
-                            } else {
-                                inc[idx] = -1;
-                                parsed[end[idx - 1] + 1] = parsed[begin[idx]] + begin[idx] - end[idx - 1] - 1;
-                                end[idx] = Math.min(i - 1, begin[idx] + parsed[begin[idx]] - 1);
-                                begin[idx] = end[idx - 1] + 1;
-                                idx++;
-                                begin[idx] = i;
-                                inc[idx] = Integer.MAX_VALUE;
-                            }
+                            inc[idx] = 0;
+                            parsed[end[idx - 1] + 1] = parsed[begin[idx]] + begin[idx] - end[idx - 1] - 1;;
+                            begin[idx] = end[idx - 1] + 1;
+                            end[idx] = i - 1;
+                            idx++;
+                            begin[idx] = i;
+                            inc[idx] = Integer.MAX_VALUE;
                         }
                     }
                 }
@@ -133,37 +117,23 @@ public class D {
                     begin[idx] = end[idx - 1] + 1;
                     end[idx] = as.length - 1;
                 } else {
-                    inc[idx] = -1;
+                    inc[idx] = 0;
                     parsed[end[idx - 1] + 1] = parsed[begin[idx]] + begin[idx] - end[idx - 1] - 1;
-                    end[idx] = Math.min(as.length - 1, begin[idx] + parsed[begin[idx]] - 1);
+                    end[idx] = as.length - 1;
                     begin[idx] = end[idx - 1] + 1;
-                    if (end[idx] < as.length - 1) {
-                        idx++;
-                        begin[idx] = end[idx - 1] + 1;
-                        inc[idx] = Integer.MAX_VALUE;
-                        end[idx] = as.length - 1;
-                    }
                 }
             }
         }
         return idx;
     }
-
+    
     public static void main(String[] args) {
         BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
         try {
             br.readLine();
             String s = br.readLine();
             String as[] = s.split(" ");
-            int ans = solve(as);
-            for (int i = 0; i < as.length / 2; i++) {
-                s = as[i];
-                as[i] = as[as.length - i - 1];
-                as[as.length - i - 1] = s;
-            }
-            //System.out.println("--");
-            ans = Math.min(ans, solve(as));
-            System.out.println(ans);
+            System.out.println(solve(as));
         } catch (IOException ex) {
         }
     }
