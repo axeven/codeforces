@@ -3,68 +3,71 @@ package cf825;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.util.Arrays;
 
 public class D {
 
     public static void main(String[] args) {
         BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
         try {
-            String s = br.readLine();
+            String ss = br.readLine();
             String t = br.readLine();
-            int[] tp = new int[26];
             int ans = 0;
+            int[] tp = new int[26];
             for (int i = 0; i < t.length(); ++i) {
                 tp[t.charAt(i) - 'a']++;
             }
-            for (int i = 0; i < s.length() - t.length() + 1;) {
-                //System.out.println("i:" + i);
-                int[] ts = new int[26];
-                System.arraycopy(tp, 0, ts, 0, 26);
-                int slot = 0;
+            int slot = 0;
+            int[] sp = new int[26];
+            char[] s = ss.toCharArray();
+            for (int i = 0; i < s.length; ++i) {
+                if (s[i] == '?') {
+                    slot++;
+                } else {
+                    sp[s[i] - 'a']++;
+                }
+            }
+            int f[] = new int[26];
+            while (true) {
                 boolean fail = false;
-                for (int j = 0; j < t.length(); ++j) {
-                    if (s.charAt(i + j) == '?') {
-                        slot++;
-                    } else if (--ts[s.charAt(i + j) - 'a'] < 0) {
-                        fail = true;
-                        break;
+                for (int i = 0; i < tp.length; ++i) {
+                    sp[i] -= tp[i];
+                    //System.out.println("i:" + i + " sp:" + sp[i]);
+                    if (sp[i] < 0) {
+                        slot += sp[i];
+                        if (slot < 0) {
+                            fail = true;
+                            break;
+                        } else {
+                            f[i] -= sp[i];
+                            sp[i] = 0;
+                        }
                     }
                 }
                 if (fail) {
-                    i++;
-                    //System.out.println("fail");
-                    continue;
+                    break;
                 }
-                for (int j = 0; j < ts.length; ++j) {
-                    slot -= ts[j];
-                }
-                if (slot != 0) {
-                    //System.out.println("no");
+                ans++;
+            }
+            String fill = "";
+            for (int i = 0; i < f.length; i++) {
+                char y[] = new char[f[i]];
+                Arrays.fill(y, (char)('a' + i));
+                String sy = new String(y);
+                fill += sy;
+            }
+            //System.out.println(fill);
+            for (int i = 0, j = 0; i < fill.length() && j < s.length; ++j) {
+                if (s[j] == '?') {
+                    s[j] = fill.charAt(i);
                     i++;
-                } else {
-                    //System.out.println("yes");
-                    String fill = "";
-                    for (int j = 0; j < ts.length;) {
-                        if (ts[j] > 0) {
-                            fill = fill + (char) ('a' + j);
-                            ts[j]--;
-                        } else {
-                            j++;
-                        }
-                    }
-                    for (int j = 0, k = 0; k < t.length() && j < fill.length(); ++k) {
-                        if (s.charAt(i + k) == '?') {
-                            s = s.substring(0, i + k) + fill.charAt(j) + s.substring(i + k + 1);
-                            j++;
-                        }
-                    }
-                    i += t.length();
-                    ans++;
                 }
             }
-            s = s.replace('?', 'a');
-            // System.out.println(ans);
-            System.out.println(s);
+            ss = new String(s);
+            ss = ss.replace('?', 'a');
+
+            //System.out.println(ans);
+            System.out.println(ss);
         } catch (IOException ex) {
         }
     }
